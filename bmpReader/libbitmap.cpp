@@ -6,6 +6,16 @@
 #include <memory>
 #include "libbitmap.h"
 
+
+LPCTSTR Get_err_str(Err err)
+{
+	if (err == Err::open) return L"Does not open file";
+	else if (err == Err::memory) return L"File is not open";
+	else if (err == Err::write) return L"Not survived";
+	else if (err == Err::mode) return L"Format is not supported";
+	else if (err == Err::header) return L"File is broken";
+}
+
 // -- commons ------------------------------------------------------------------------------------ //
 
 template < size_t align >
@@ -761,27 +771,27 @@ private: // stream read/write
 
 // -- commons ------------------------------------------------------------------------------------ //
 
-bool Bitmap::load(const char * file_name)
+Err Bitmap::load(const char * file_name)
 {
 	clear();
 
 	std::ifstream file(file_name, std::ios::in | std::ios::binary);
 
 	if (!file.good())
-		return false;
+		return Err::open;
 
 	if (!file.seekg(0, std::ios_base::beg).good())
-		return false;
+		return Err::open;
 
 	BitmapFileHeader file_header;
 
 	if (!file_header.read(file))
-		return false;
+		return Err::header;
 
 	BitmapHeader header;
 
 	if (!header.read(file))
-		return false;
+		return Err::header;
 
 	const depth_t internal_depth = bpp32;
 	const size_t  width = header.width();
@@ -816,14 +826,14 @@ bool Bitmap::load(const char * file_name)
 				{
 					uint8_t tmp;
 					if (!file.read((char*)&tmp, depth / 8).good())
-						return false;
+						return Err::mode;
 					start[y * internal_stride + x*internal_depth / 8] = tmp;
 					start[y * internal_stride + x*internal_depth / 8 + 1] = tmp;
 					start[y * internal_stride + x*internal_depth / 8 + 2] = tmp;
 					start[y * internal_stride + x*internal_depth / 8 + 3] = 0;
 				}
 				if (padding && !read_object(file, dummy, padding))
-					return false;
+					return Err::mode;
 			}
 		}
 		else if (depth == bpp16)
@@ -834,7 +844,7 @@ bool Bitmap::load(const char * file_name)
 				{
 					uint16_t tmp, t;
 					if (!file.read((char*)&tmp, depth / 8).good())
-						return false;
+						return Err::mode;
 
 					t = tmp & 0xF800;
 					t = ((double)t / 0x1F) * 0xFF;
@@ -848,7 +858,7 @@ bool Bitmap::load(const char * file_name)
 					start[y * internal_stride + x*internal_depth / 8 + 3] = 0;
 				}
 				if (padding && !read_object(file, dummy, padding))
-					return false;
+					return Err::mode;
 			}
 		}
 		else if (depth == bpp24)
@@ -858,11 +868,11 @@ bool Bitmap::load(const char * file_name)
 				for (size_t x = 0; x < width; ++x)
 				{
 					if (!file.read((char *)(start + y * internal_stride + x*internal_depth / 8), depth / 8).good())
-						return false;
+						return Err::mode;
 					start[y * internal_stride + x*internal_depth / 8 + depth / 8] = 0;
 				}
 				if (padding && !read_object(file, dummy, padding))
-					return false;
+					return Err::mode;
 			}
 		}
 		else if (depth == bpp32)
@@ -872,16 +882,16 @@ bool Bitmap::load(const char * file_name)
 				for (size_t x = 0; x < width; ++x)
 				{
 					if (!file.read((char *)(start + y * internal_stride + x*internal_depth / 8), depth / 8).good())
-						return false;
+						return Err::mode;
 				}
 			}
 		}
-		else return false;
+		else return Err::mode;
 
 		m_buffer = buffer.release();
 		m_width = width;
 		m_height = height;
-		return true;
+		return Err::ok;
 	}
 	else if (mode == modeBitFields || mode == modeAlphaBitFields)
 	{
@@ -896,18 +906,21 @@ bool Bitmap::load(const char * file_name)
 	{
 	}
 
-	return false;
+	return Err::mode;
 }
 
-bool Bitmap::save(const char * file_name) const
+Err Bitmap::save(const char * file_name) const
 {
+	if (m_buffer == nullptr)
+		return Err::memory;
+
 	std::ofstream file(file_name, std::ios::out | std::ios::binary);
 
 	if (!file.good())
-		return false;
+		return Err::open;
 
 	if (!file.seekp(0, std::ios_base::beg).good())
-		return false;
+		return Err::open;
 
 	BitmapHeader header(info3, m_width, m_height, false, bpp32);
 
@@ -916,10 +929,10 @@ bool Bitmap::save(const char * file_name) const
 	BitmapFileHeader file_header(offset, offset + header.image_size());
 
 	if (!file_header.write(file))
-		return false;
+		return Err::header;
 
 	if (!header.write(file))
-		return false;
+		return Err::header;
 
 	const bool topdown = header.topdown();
 	const uint32_t dummy = 0;
@@ -935,12 +948,12 @@ bool Bitmap::save(const char * file_name) const
 	for (size_t y = 0; y < m_height; ++y)
 	{
 		if (!write_object(file, buffer_start[y * buffer_stride], line_size))
-			return false;
+			return Err::write;
 		if (padding && !write_object(file, dummy, padding))
-			return false;
+			return Err::write;
 	}
 
 
 
-	return true;
+	return Err::ok;
 }

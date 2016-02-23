@@ -34,6 +34,13 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+
+	void frame_pos_update()
+	{
+		int pos_x = double(m_cSliderH.GetPos()) / 100 * (bmp.m_width - m_pFrame.get_width());
+		int pos_y = double(100 - m_cSliderV.GetPos()) / 100 * (bmp.m_height - m_pFrame.get_height());
+		m_pFrame.pos_update(pos_x, pos_y);
+	}
 public:
 	CMyFrameWnd m_pFrame;
 	afx_msg void OnStnClickedMyframewnd();
@@ -41,14 +48,16 @@ public:
 	afx_msg void OnBnClickedButtonSave();
 	Bitmap bmp;
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	CSliderCtrl m_cSliderV;
 	CSliderCtrl m_cSliderH;
-	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	CEdit m_cEditAdds;
 	afx_msg void OnBnClickedButtonFlipY();
 	afx_msg void OnBnClickedButtonFlipX();
-	CEdit m_cEditAdds;
+
 	afx_msg void OnBnClickedButtonInvertR();
 	afx_msg void OnBnClickedButtonInvertG();
 	afx_msg void OnBnClickedButtonInvertB();
+	
 
 };

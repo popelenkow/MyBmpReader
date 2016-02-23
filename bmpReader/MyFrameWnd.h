@@ -32,7 +32,10 @@ public:
 	void update_image(const Bitmap& bmp)
 	{
 		clean_image();
-		image = new Image(bmp.m_width, bmp.m_height, (COLORREF*)bmp.m_buffer);
+		if (bmp.m_buffer != nullptr)
+		{
+			image = new Image(bmp.m_width, bmp.m_height, (COLORREF*)bmp.m_buffer);
+		}
 	}
 	void clean_image()
 	{

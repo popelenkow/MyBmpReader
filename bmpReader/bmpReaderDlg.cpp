@@ -186,13 +186,20 @@ void CbmpReaderDlg::OnBnClickedButtonLoad()
 	if (fileDlg.DoModal() == IDOK)
 	{
 		CString strPathName = fileDlg.GetPathName();
-		m_cEditAdds.SetWindowTextW(strPathName);
-		m_pFrame.clean_image();
+		
 		char str[500];
 		wcstombs(str, (wchar_t*)strPathName.GetString(), sizeof(str));
-		bool res = bmp.load(str);
-		assert(res);
+		Err err = bmp.load(str);
+
+		if (err != Err::ok)
+		{
+			MessageBox(Get_err_str(err), L"Err");
+			strPathName = L"";
+		}
 		m_pFrame.update_image(bmp);
+		m_cEditAdds.SetWindowTextW(strPathName);
+
+		frame_pos_update();
 		m_pFrame.Invalidate();
 	}
 }
@@ -205,12 +212,17 @@ void CbmpReaderDlg::OnBnClickedButtonSave()
 	if (fileDlg.DoModal() == IDOK)
 	{
 		CString strPathName = fileDlg.GetPathName();
-		m_cEditAdds.SetWindowTextW(strPathName);
 		m_pFrame.clean_image();
 		char str[500];
 		wcstombs(str, (wchar_t*)strPathName.GetString(), sizeof(str));
-		bool res = bmp.save(str);
-		assert(res);
+		Err err = bmp.save(str);
+		if (err == Err::ok)
+		{
+		}
+		else
+		{
+			MessageBox(Get_err_str(err), L"Err");
+		}
 	}
 }
 
@@ -219,9 +231,7 @@ void CbmpReaderDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if (pScrollBar->m_hWnd == m_cSliderV.m_hWnd)
 	{
-		int pos_x = double(m_cSliderH.GetPos()) / 100 * (bmp.m_width - m_pFrame.get_width());
-		int pos_y = double(100 - m_cSliderV.GetPos()) / 100 * (bmp.m_height - m_pFrame.get_height());
-		m_pFrame.pos_update(pos_x, pos_y);
+		frame_pos_update();
 		m_pFrame.Invalidate();
 	}
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
@@ -232,9 +242,7 @@ void CbmpReaderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if (pScrollBar->m_hWnd == m_cSliderH.m_hWnd)
 	{
-		int pos_x = double(m_cSliderH.GetPos()) / 100 * (bmp.m_width - m_pFrame.get_width());
-		int pos_y = double(100 - m_cSliderV.GetPos()) / 100 * (bmp.m_height - m_pFrame.get_height());
-		m_pFrame.pos_update(pos_x, pos_y);
+		frame_pos_update();
 		m_pFrame.Invalidate();
 	}
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);

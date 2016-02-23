@@ -4,6 +4,19 @@
 #include <cstdint>
 #include <string>
 
+enum Err
+{
+	ok = 0,
+	open = 1,
+	header = 2,
+	mode = 3,
+	memory = 4,
+	write = 5
+};
+
+LPCTSTR Get_err_str(Err err);
+
+
 class Bitmap
 {
 public:
@@ -19,13 +32,13 @@ public:
 	}
 
 public:
-	bool load(const char * file_name);
-	inline bool load(const std::string & file_name)
+	Err load(const char * file_name);
+	inline Err load(const std::string & file_name)
 	{
 		return load(file_name.c_str());
 	}
-	bool save(const char * file_name) const;
-	inline bool save(const std::string & file_name) const
+	Err save(const char * file_name) const;
+	inline Err save(const std::string & file_name) const
 	{
 		return save(file_name.c_str());
 	}
