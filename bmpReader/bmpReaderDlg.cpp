@@ -76,6 +76,7 @@ BEGIN_MESSAGE_MAP(CbmpReaderDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_INVERT_G, &CbmpReaderDlg::OnBnClickedButtonInvertG)
 	ON_BN_CLICKED(IDC_BUTTON_INVERT_B, &CbmpReaderDlg::OnBnClickedButtonInvertB)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE, &CbmpReaderDlg::OnBnClickedButtonSave)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_H, &CbmpReaderDlg::OnNMCustomdrawSliderH)
 END_MESSAGE_MAP()
 
 
@@ -116,7 +117,7 @@ BOOL CbmpReaderDlg::OnInitDialog()
 	m_cSliderH.SetPos(0);
 	m_cSliderV.SetRange(0, 100);
 	m_cSliderV.SetPos(0);
-	
+	frame_dimensions_update();
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -306,3 +307,30 @@ void CbmpReaderDlg::OnBnClickedButtonInvertB()
 
 
 
+
+
+void CbmpReaderDlg::OnNMCustomdrawSliderH(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: добавьте свой код обработчика уведомлений
+	*pResult = 0;
+}
+
+
+void CbmpReaderDlg::frame_pos_update()
+{
+	Point buf = m_pFrame.get_dimensions_image();
+	Point pos;
+	pos.x = double(m_cSliderH.GetPos()) / 100 * (bmp.m_width - buf.x);
+	pos.y = double(100 - m_cSliderV.GetPos()) / 100 * (bmp.m_height - buf.y);
+	m_pFrame.update_pos_image(pos);
+}
+void CbmpReaderDlg::frame_dimensions_update()
+{
+	CRect rect;
+	GetClientRect(&rect);
+	Point d;
+	d.x = rect.Width() - 35;
+	d.y = rect.Height() - 55;
+	m_pFrame.update_dimensions_image(d);
+}

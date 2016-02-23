@@ -3,7 +3,15 @@
 #include "MyImage.h"
 
 // CMyFrameWnd
-
+class Point
+{
+public:
+	int x;
+	int y;
+	Point(int _x = 0, int _y = 0) : x(_x), y(_y)
+	{
+	}
+};
 class CMyFrameWnd : public CWnd
 {
 	DECLARE_DYNAMIC(CMyFrameWnd)
@@ -17,17 +25,26 @@ protected:
 	afx_msg void OnPaint();
 
 private:
-	int pos_x, pos_y;
-	int m_height, m_width;
+	Point pos;
+	Point dimensions;
 	Image *image = nullptr;
 public:
-	int get_height()
+
+	Point get_pos_image()
 	{
-		return m_height;
+		return pos;
 	}
-	int get_width()
+	void update_pos_image(Point p)
 	{
-		return m_width;
+		pos = p;
+	}
+	Point get_dimensions_image()
+	{
+		return dimensions;
+	}
+	void update_dimensions_image(Point d)
+	{
+		dimensions = d;
 	}
 	void update_image(const Bitmap& bmp)
 	{
@@ -44,11 +61,6 @@ public:
 			delete image;
 			image = nullptr;
 		}
-	}
-	void pos_update(int x, int y)
-	{
-		pos_x = x;
-		pos_y = y;
 	}
 	Image* get_image()
 	{
